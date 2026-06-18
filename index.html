@@ -330,6 +330,7 @@
 <nav>
   <div class="nav-row">
     <div class="nav-mark">Lokadi<span> Naicker</span></div>
+    <a class="nav-link" href="https://www.linkedin.com/in/lokadi-naicker-508175253/" target="_blank" rel="noopener">LinkedIn ↗</a>
     <a class="nav-link" href="https://github.com/LokadiNaicker" target="_blank" rel="noopener">GitHub ↗</a>
   </div>
 </nav>
@@ -339,11 +340,14 @@
   <div class="nebula" id="nebula" aria-hidden="true"></div>
   <div class="hero-planet" aria-hidden="true"></div>
   <div class="wrap hero-inner">
-    <div class="eyebrow"><span class="pulse"></span> mission status: active · github.com/LokadiNaicker</div>
+    <div class="eyebrow">
+  <span class="pulse"></span> mission status: active · press [W][A][S][D] or touch for manual override
+</div>
     <h1>Currently in <span class="accent">orbit</span>.</h1>
     <p class="lede">A live feed of what's launched on GitHub — pulled straight from mission control, no embellishment.</p>
     <div class="hero-actions">
-      <a class="btn btn-grad" data-magnetic href="https://github.com/LokadiNaicker" target="_blank" rel="noopener">View GitHub profile</a>
+      <a class="btn btn-ghost" data-magnetic href="https://www.linkedin.com/in/lokadi-naicker-508175253/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn btn-ghost" data-magnetic href="https://github.com/LokadiNaicker" target="_blank" rel="noopener">View GitHub profile</a>
       <button class="btn btn-ghost" data-magnetic id="toProjects" type="button">See Projects ↓</button>
     </div>
   </div>
@@ -530,6 +534,7 @@
   });
 
   /* ---------------- starfield generator ---------------- */
+/* ---------------- starfield generator & parallax ---------------- */
   function createStars(container, count){
     if(!container) return;
     for(var i=0;i<count;i++){
@@ -544,11 +549,26 @@
       var dur = 2 + Math.random()*3.5;
       s.style.animationDuration = dur.toFixed(1) + "s";
       s.style.animationDelay = (-Math.random()*dur).toFixed(1) + "s";
+      
+      // Give each star a random speed multiplier for the 3D depth effect
+      s.dataset.speed = (Math.random() * 0.4 + 0.1).toFixed(2);
+      
       container.appendChild(s);
     }
   }
   createStars(document.getElementById("introStars"), reduceMotion ? 40 : 70);
   createStars(document.getElementById("heroStars"), reduceMotion ? 0 : 35);
+
+  // The Parallax Scroll Listener
+  if(!reduceMotion) {
+    window.addEventListener("scroll", function() {
+      var scrolled = window.scrollY;
+      document.querySelectorAll(".star").forEach(function(star) {
+        var speed = parseFloat(star.dataset.speed);
+        star.style.transform = "translateY(" + -(scrolled * speed) + "px)";
+      });
+    });
+  }
 
   /* ---------------- intro sequence ---------------- */
   var introOverlay = document.getElementById("introOverlay");
@@ -584,6 +604,16 @@
     userData = results[0] || userData;
     if(Array.isArray(results[1]) && results[1].length){ 
       repoData = results[1]; 
+
+      /* --- NEW FIX: Intercept and override the GitHub Pages repo details --- */
+      repoData.forEach(function(repo) {
+        if(repo.name === "LokadiNaicker.github.io" || repo.name.toLowerCase() === "lokadinaicker.github.io") {
+          repo.name = "My Website Portfolio";
+          repo.description = "Personal GitHub Pages site — actively evolving. Try the mini-game hidden within! (hint: read the mission status text in the header)";
+        }
+      });
+      /* --------------------------------------------------------------------- */   
+
       repoData.push(
         {
           name: "South African Bank Note Recognition System",
@@ -664,6 +694,203 @@
   }
 })();
 </script>
+
+<!-- Playable Rocket Mini-Game -->
+<div id="controlsHint" style="position: fixed; bottom: 20px; left: 28px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-faint); z-index: 100; opacity: 0; transition: opacity 2s ease; pointer-events: none;">
+  MISSION CONTROL: USE [WASD] OR [ARROWS] TO FLY
+</div>
+
+<div id="playableRocket" style="position: fixed; width: 24px; height: 40px; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 1s ease; top: 0; left: 0;">
+  <div class="rocket">
+    <div class="r-nose"></div>
+    <div class="r-body"></div>
+    <div class="r-window"></div>
+    <div class="r-fin-l"></div>
+    <div class="r-fin-r"></div>
+    <div class="r-flame" id="playerFlame" style="display: none;"></div>
+  </div>
+</div>
+
+<!-- Playable Rocket Mini-Game -->
+<style>
+  .data-orb {
+    position: fixed;
+    top: 0;            /* <-- ADD THIS */
+    left: 0;           /* <-- ADD THIS */
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--warm);
+    box-shadow: 0 0 12px var(--warm), 0 0 24px rgba(255, 176, 102, 0.6);
+    z-index: 99;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .score-ui {
+    position: fixed; top: 85px; right: 28px;
+    font-family: var(--f-mono); font-size: 13px; 
+    color: var(--cyan); z-index: 100; opacity: 0; 
+    transition: opacity 0.8s ease; pointer-events: none; 
+    text-shadow: 0 0 8px rgba(94,234,212,0.5);
+  }
+</style>
+
+<div id="gameScore" class="score-ui">
+  STARS RECOVERED: <span id="scoreVal">0</span>
+</div>
+
+<div id="controlsHint" style="position: fixed; bottom: 20px; left: 28px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-faint); z-index: 100; opacity: 0; transition: opacity 2s ease; pointer-events: none;">
+  MISSION CONTROL: USE [WASD], [ARROWS], OR TOUCH TO FLY
+</div>
+
+<div id="playableRocket" style="position: fixed; width: 24px; height: 40px; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 1s ease; top: 0; left: 0;">
+  <div class="rocket">
+    <div class="r-nose"></div>
+    <div class="r-body"></div>
+    <div class="r-window"></div>
+    <div class="r-fin-l"></div>
+    <div class="r-fin-r"></div>
+    <div class="r-flame" id="playerFlame" style="display: none;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  setTimeout(function() {
+    document.getElementById("playableRocket").style.opacity = "1";
+    document.getElementById("controlsHint").style.opacity = "1";
+    setTimeout(function(){ document.getElementById("controlsHint").style.opacity = "0"; }, 8000);
+    startGameLoop();
+  }, 4500); 
+
+  function startGameLoop() {
+    var keys = { ArrowUp:false, ArrowLeft:false, ArrowRight:false, w:false, a:false, d:false };
+    var touchX = null, touchY = null, isTouching = false;
+    var gameStarted = false;
+    var score = 0;
+    var orbs = [];
+    
+    // Listeners
+    window.addEventListener('keydown', function(e) { if(keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+    window.addEventListener('keyup', function(e) { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+    window.addEventListener('touchstart', function(e) { isTouching = true; touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; });
+    window.addEventListener('touchmove', function(e) { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; });
+    window.addEventListener('touchend', function() { isTouching = false; });
+
+    var rx = window.innerWidth / 2, ry = window.innerHeight - 80;
+    var vx = 0, vy = 0, angle = 0;
+    var playerRocket = document.getElementById('playableRocket');
+    var playerFlame = document.getElementById('playerFlame');
+    var scoreElement = document.getElementById('scoreVal');
+
+    // Spawn a drifting collectible
+    function spawnOrb() {
+      var orbEl = document.createElement("div");
+      orbEl.className = "data-orb";
+      document.body.appendChild(orbEl);
+      
+      var orb = {
+        el: orbEl,
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 2, // random drift speed X
+        vy: (Math.random() - 0.5) * 2  // random drift speed Y
+      };
+      orbs.push(orb);
+    }
+
+    // Trigger game elements on first move
+    function initGame() {
+      gameStarted = true;
+      document.getElementById("gameScore").style.opacity = "1";
+      document.getElementById("controlsHint").style.opacity = "0"; // hide hint immediately
+      for(var i = 0; i < 5; i++) spawnOrb(); // Spawn 5 orbs to start
+    }
+
+    function loop() {
+      var thrusting = keys.ArrowUp || keys.w;
+      var rotating = keys.ArrowLeft || keys.a || keys.ArrowRight || keys.d;
+
+      if (isTouching && touchX !== null && touchY !== null) {
+        var dx = touchX - rx;
+        var dy = touchY - ry;
+        angle = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
+        thrusting = true;
+      } else {
+        if (keys.ArrowLeft || keys.a) angle -= 5;
+        if (keys.ArrowRight || keys.d) angle += 5;
+      }
+
+      // Start the actual game if they provide input
+      if (!gameStarted && (thrusting || rotating)) {
+        initGame();
+      }
+
+      playerFlame.style.display = thrusting ? 'block' : 'none';
+
+      if (thrusting) {
+        var rad = (angle - 90) * Math.PI / 180;
+        vx += Math.cos(rad) * 0.5;
+        vy += Math.sin(rad) * 0.5;
+      }
+
+      // Rocket physics
+      vx *= 0.96; vy *= 0.96; 
+      rx += vx; ry += vy;
+
+      // Rocket screen wrapping
+      if (rx < -30) rx = window.innerWidth + 10;
+      if (rx > window.innerWidth + 30) rx = -10;
+      if (ry < -50) ry = window.innerHeight + 10;
+      if (ry > window.innerHeight + 50) ry = -10;
+
+      playerRocket.style.transform = "translate(" + rx + "px, " + ry + "px) rotate(" + angle + "deg)";
+
+      // Orb Physics & Collision
+      if (gameStarted) {
+        // Rocket center point for collision
+        var cx = rx + 12; 
+        var cy = ry + 20;
+
+        orbs.forEach(function(orb) {
+          // Move orbs
+          orb.x += orb.vx;
+          orb.y += orb.vy;
+
+          // Wrap orbs around screen
+          if (orb.x < -20) orb.x = window.innerWidth + 10;
+          if (orb.x > window.innerWidth + 20) orb.x = -10;
+          if (orb.y < -20) orb.y = window.innerHeight + 10;
+          if (orb.y > window.innerHeight + 20) orb.y = -10;
+
+          orb.el.style.transform = "translate(" + orb.x + "px, " + orb.y + "px)";
+
+          // Check collision (Distance formula)
+          var dist = Math.hypot((orb.x + 6) - cx, (orb.y + 6) - cy);
+          if (dist < 28) { // Hit!
+            score++;
+            scoreElement.innerText = score;
+            
+            // "Pop" effect: reset position and velocity
+            orb.el.style.opacity = "0";
+            setTimeout(function() {
+              orb.x = Math.random() * window.innerWidth;
+              orb.y = Math.random() * window.innerHeight;
+              orb.vx = (Math.random() - 0.5) * 3; // Give it a new random speed
+              orb.vy = (Math.random() - 0.5) * 3;
+              orb.el.style.opacity = "1";
+            }, 200);
+          }
+        });
+      }
+
+      requestAnimationFrame(loop);
+    }
+    
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
+
 
 </body>
 </html>
