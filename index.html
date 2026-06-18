@@ -126,15 +126,24 @@
   .btn-ghost:hover{ border-color:var(--cyan); }
   .btn[data-magnetic]{ will-change: transform; }
 
-  /* ---------------- stats ---------------- */
-  .stats{
-    display:flex; flex-wrap:wrap; gap:34px;
+  /* ---------------- skills ---------------- */
+  .skills-wrap{
     padding:34px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
     margin-bottom:80px; position:relative; z-index:1;
   }
-  .stat{ display:flex; flex-direction:column; gap:4px; }
-  .stat-num{ font-family:var(--f-display); font-size:28px; font-weight:600; }
-  .stat-label{ font-size:12px; color:var(--ink-faint); font-family:var(--f-mono); letter-spacing:0.04em; }
+  .skills-label{
+    font-size:12px; color:var(--ink-faint); font-family:var(--f-mono);
+    letter-spacing:0.04em; margin-bottom:16px; text-transform:uppercase;
+  }
+  .skills-list{
+    display:flex; flex-wrap:wrap; gap:12px;
+  }
+  .skill-chip{
+    font-family:var(--f-mono); font-size:13px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line);
+    padding:8px 16px; border-radius:100px; transition:border-color .15s ease;
+  }
+  .skill-chip:hover{ border-color:var(--warm); }
 
   /* ---------------- projects ---------------- */
   .section-head{
@@ -342,11 +351,18 @@
 
 <main class="wrap">
 
-  <div class="stats" id="LANGUAGES">
-    <div class="stat"><span class="stat-num" id="statRepos">C++</span><span class="stat-label"></span></div>
-    <div class="stat"><span class="stat-num" id="statStars">JAVA</span><span class="stat-label"></span></div>
-    <div class="stat"><span class="stat-num" id="statFollowers">HTML</span><span class="stat-label"></span></div>
-    <div class="stat"><span class="stat-num" id="statLang">Python</span><span class="stat-label">TOP LANGUAGE</span></div>
+  <div class="skills-wrap" id="LANGUAGES">
+    <div class="skills-label">Languages & Technologies</div>
+    <div class="skills-list">
+      <span class="skill-chip">Python</span>
+      <span class="skill-chip">Java</span>
+      <span class="skill-chip">C++</span>
+      <span class="skill-chip">C#</span>
+      <span class="skill-chip">JavaScript</span>
+      <span class="skill-chip">HTML & CSS</span>
+      <span class="skill-chip">ASP.NET</span>
+      <span class="skill-chip">LaTeX</span>
+    </div>
   </div>
 
   <section id="projects">
@@ -361,7 +377,7 @@
         <button class="chip" data-sort="name" type="button">a–z</button>
       </div>
     </div>
-    <div class="grid" id="grid"><!-- populated by JS --></div>
+    <div class="grid" id="grid"></div>
   </section>
 
   <footer>
@@ -385,7 +401,7 @@
   };
   var DEFAULT_REPOS = [
     {
-      name: "My Personal Project Portfolio",
+      name: "MyWebsite Portfolio",
       description: "Personal GitHub Pages site — actively evolving.",
       html_url: "https://github.com/LokadiNaicker/LokadiNaicker.github.io",
       language: "HTML",
@@ -433,8 +449,6 @@
     forks_count: 0,
     updated_at: null
     }
- 
-
   ];
 
   var repoData = DEFAULT_REPOS.slice();
@@ -462,18 +476,6 @@
     diff /= 24; if(diff < 30) return Math.floor(diff) + "d ago";
     diff /= 30; if(diff < 12) return Math.floor(diff) + "mo ago";
     diff /= 12; return Math.floor(diff) + "y ago";
-  }
-
-  function renderStats(){
-    var totalStars = repoData.reduce(function(s,r){ return s + (r.stargazers_count||0); }, 0);
-    var langCount = {};
-    repoData.forEach(function(r){ if(r.language) langCount[r.language] = (langCount[r.language]||0)+1; });
-    var topLang = Object.keys(langCount).sort(function(a,b){ return langCount[b]-langCount[a]; })[0] || "n/a";
-
-    document.getElementById("statRepos").textContent = userData.public_repos;
-    document.getElementById("statStars").textContent = totalStars;
-    document.getElementById("statFollowers").textContent = userData.followers;
-    document.getElementById("statLang").textContent = topLang;
   }
 
   function renderGrid(list){
@@ -572,7 +574,6 @@
     setTimeout(endIntro, 4400);
   }
 
-  renderStats();
   sortAndRender("stars");
 
   /* attempt to refresh live from the GitHub API; silently keep snapshot on failure */
@@ -581,51 +582,47 @@
     fetch("https://api.github.com/users/" + USERNAME + "/repos?per_page=100&sort=updated").then(function(r){ if(!r.ok) throw 0; return r.json(); })
   ]).then(function(results){
     userData = results[0] || userData;
-    if(Array.isArray(results[1]) && results[1].length){ repoData = results[1]; 
-
-   repoData.push(
-{
-    name: "South African Bank Note Recognition System",
-    description: "Engineered a robust, scale and rotation-invariant Computer Vision pipeline to classify South African bank notes against complex, highly textured backgrounds.",
-    html_url: "https://github.com/ArjunRamphal/COMP702Project",
-    language: "Python",
-    stargazers_count: 0,
-    forks_count: 0,
-    updated_at: null
-},
-{
-    name: "Point of Sale System APPLICATION",
-    description: "Developed a Point of Sale desktop application for a Durban-based trading and general supplies company. The system manages customers, orders and business operations.",
-    html_url: "https://github.com/ArjunRamphal/DnD-Trading",
-    language: "C#",
-    stargazers_count: 0,
-    forks_count: 0,
-    updated_at: null
-},
-{
-    name: "Point of Sale System WEBSITE",
-    description: "Developed a web-based Point of Sale platform allowing customers to place and manage orders online.",
-    html_url: "https://github.com/ArjunRamphal/DNDWebsite",
-    language: "JavaScript, ASP.NET, C#, CSS",
-    stargazers_count: 0,
-    forks_count: 0,
-    updated_at: null
-},
-{
-    name: "Dungeon Descent",
-    description: "Dungeon Descent is a C++ dungeon-crawling game developed using SFML, featuring animated menus, cinematic intro sequences, interactive dialogue systems, and real-time gameplay mechanics in a fantasy-themed environment.",
-    html_url: "https://github.com/ArjunRamphal/Dungeon_Descent",
-    language: "JavaScript, C++, HTML",
-    stargazers_count: 0,
-    forks_count: 0,
-    updated_at: null
-}
-
-
-);
-
+    if(Array.isArray(results[1]) && results[1].length){ 
+      repoData = results[1]; 
+      repoData.push(
+        {
+          name: "South African Bank Note Recognition System",
+          description: "Engineered a robust, scale and rotation-invariant Computer Vision pipeline to classify South African bank notes against complex, highly textured backgrounds.",
+          html_url: "https://github.com/ArjunRamphal/COMP702Project",
+          language: "Python",
+          stargazers_count: 0,
+          forks_count: 0,
+          updated_at: null
+        },
+        {
+          name: "Point of Sale System APPLICATION",
+          description: "Developed a Point of Sale desktop application for a Durban-based trading and general supplies company. The system manages customers, orders and business operations.",
+          html_url: "https://github.com/ArjunRamphal/DnD-Trading",
+          language: "C#",
+          stargazers_count: 0,
+          forks_count: 0,
+          updated_at: null
+        },
+        {
+          name: "Point of Sale System WEBSITE",
+          description: "Developed a web-based Point of Sale platform allowing customers to place and manage orders online.",
+          html_url: "https://github.com/ArjunRamphal/DNDWebsite",
+          language: "JavaScript, ASP.NET, C#, CSS",
+          stargazers_count: 0,
+          forks_count: 0,
+          updated_at: null
+        },
+        {
+          name: "Dungeon Descent",
+          description: "Dungeon Descent is a C++ dungeon-crawling game developed using SFML, featuring animated menus, cinematic intro sequences, interactive dialogue systems, and real-time gameplay mechanics in a fantasy-themed environment.",
+          html_url: "https://github.com/ArjunRamphal/Dungeon_Descent",
+          language: "JavaScript, C++, HTML",
+          stargazers_count: 0,
+          forks_count: 0,
+          updated_at: null
+        }
+      );
     }
-    renderStats();
     var active = document.querySelector(".chip.active");
     sortAndRender(active ? active.dataset.sort : "stars");
   }).catch(function(){ /* keep static snapshot, no error shown to user */ });
